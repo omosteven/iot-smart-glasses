@@ -2,3 +2,6 @@
 venv
 models
 /models
+models/Yolo3
+models/YoloTiny
+models/MobileNetSSD
