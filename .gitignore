@@ -8,3 +8,5 @@ models/MobileNetSSD
 /models/Yolo3
 /models/YoloTiny
 /models/MobileNetSSD
+.idea
+/.idea
