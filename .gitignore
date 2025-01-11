@@ -1,6 +1,6 @@
 /venv
 venv
-models
+models/
 /models
 models/Yolo3
 models/YoloTiny
