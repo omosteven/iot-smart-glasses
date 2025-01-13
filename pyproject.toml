@@ -1,0 +1,20 @@
+[tool.poetry]
+name = "smart-glass"
+version = "0.1.0"
+description = "Iot Smart Glass"
+authors = ["Steve, Obigvee"]
+license = "MIT"
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.10"
+pixy = "^1.0.3"
+pyttsx3 = "^2.98"
+opencv-python = "^4.10.0.84"
+pytesseract = "^0.3.13"
+numpy = "^2.2.1"
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
