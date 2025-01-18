@@ -154,5 +154,5 @@ class ObjectDetection:
 
 if __name__ == "__main__":
     detector = ObjectDetection()
-    detector.model = detector.MODELS[0]
+    detector.model = detector.MODELS[2]
     detector.run()
