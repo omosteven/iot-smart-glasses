@@ -1,50 +1,51 @@
 import cv2
 import pytesseract
-from picamera2.array import PiRGBArray
-from picamera2 import PiCamera2
+from picamera2 import Picamera2
+import numpy as np
 import time
 
 
 class RealTimeOCR:
-    def __init__(self, resolution=(640, 480), framerate=30, tesseract_config="--oem 3 --psm 6"):
+    def __init__(self, resolution=(640, 480), tesseract_config="--oem 3 --psm 6"):
         """
         Initialize the OCR pipeline.
-
+        
         Args:
-            resolution: Resolution of the PiCamera capture.
-            framerate: Frame rate of the camera.
+            resolution: Resolution of the Picamera2 capture.
             tesseract_config: Configuration for Tesseract OCR.
         """
-        self.camera = PiCamera2()
-        self.camera.resolution = resolution
-        self.camera.framerate = framerate
-        self.raw_capture = PiRGBArray(self.camera, size=resolution)
+        self.camera = Picamera2()
         self.tesseract_config = tesseract_config
-
+        
+        # Configure camera
+        camera_config = self.camera.create_preview_configuration(main={"size": resolution, "format": "RGB888"})
+        self.camera.configure(camera_config)
+        self.camera.start()
+        
         # Allow the camera to warm up
         time.sleep(2)
 
     def preprocess_image(self, image):
         """
         Preprocess the image to improve OCR accuracy.
-
+        
         Args:
             image: Input image from the camera.
-
+            
         Returns:
             Preprocessed image.
         """
-        gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+        gray = cv2.cvtColor(image, cv2.COLOR_RGB2GRAY)
         _, binary = cv2.threshold(gray, 150, 255, cv2.THRESH_BINARY)
         return binary
 
     def extract_text(self, image):
         """
         Extract text from an image using Tesseract OCR.
-
+        
         Args:
             image: Input image for text extraction.
-
+            
         Returns:
             Extracted text as a string.
         """
@@ -54,20 +55,18 @@ class RealTimeOCR:
         """
         Run the real-time OCR pipeline.
         """
-        print("Starting real-time OCR. Press Ctrl+C to stop.")
+        print("Starting real-time OCR. Press 'q' to quit.")
         try:
-            for frame in self.camera.capture_continuous(self.raw_capture, format="bgr", use_video_port=True):
-                image = frame.array
-                processed_image = self.preprocess_image(image)
+            while True:
+                # Capture a frame
+                frame = self.camera.capture_array()
+                processed_image = self.preprocess_image(frame)
                 text = self.extract_text(processed_image)
-
+                
                 # Display the image and extracted text
                 cv2.imshow("Frame", processed_image)
                 print("Extracted Text:", text)
-
-                # Clear the stream for the next frame
-                self.raw_capture.truncate(0)
-
+                
                 # Break the loop if 'q' is pressed
                 if cv2.waitKey(1) & 0xFF == ord('q'):
                     break
@@ -80,8 +79,8 @@ class RealTimeOCR:
         """
         Cleanup resources.
         """
+        self.camera.stop()
         cv2.destroyAllWindows()
-        self.camera.close()
 
 
 # Example usage
