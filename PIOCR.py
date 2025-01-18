@@ -1,7 +1,7 @@
 import cv2
 import pytesseract
-from picamera.array import PiRGBArray
-from picamera import PiCamera
+from picamera2.array import PiRGBArray
+from picamera2 import PiCamera2
 import time
 
 
@@ -15,7 +15,7 @@ class RealTimeOCR:
             framerate: Frame rate of the camera.
             tesseract_config: Configuration for Tesseract OCR.
         """
-        self.camera = PiCamera()
+        self.camera = PiCamera2()
         self.camera.resolution = resolution
         self.camera.framerate = framerate
         self.raw_capture = PiRGBArray(self.camera, size=resolution)
