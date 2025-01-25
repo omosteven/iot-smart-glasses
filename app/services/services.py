@@ -35,4 +35,4 @@ def get_text_from_image(file: UploadFile = File(...)):
     if extracted_text is None:
         raise HTTPException(status_code=500, detail="2 Failed to extract text from the image.")
     
-    return {"extracted_text": extracted_text}
+    return {"data": extracted_text, "message":"success"}
