@@ -16,3 +16,6 @@ async def welcome_root():
 @app.get("/")
 async def read_root():
     return {"message": "Welcome to FastAPI!"}
+
+if __name__ == "__main__":
+    app.run(host="0.0.0.0", port=8000, debug=False)
