@@ -5,6 +5,9 @@ import pytesseract
 import io
 import logging
 
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
+
 def image_to_text(image_file: UploadFile) -> Union[str, None]:
     """
     Extract text from an uploaded image file using Tesseract OCR.
@@ -16,23 +19,21 @@ def image_to_text(image_file: UploadFile) -> Union[str, None]:
         str: The extracted text, or None if extraction fails.
     """
     try:
-        logging.info("Reading image file...")
-        # Ensure file stream is properly read
-        contents = image_file.file.read()
-        image_file.file.seek(0)  # Reset the file pointer after reading
-        
-        # Load the image from bytes
-        image = Image.open(io.BytesIO(contents))
-        logging.info("Performing OCR...")
+        logger.info("Starting text extraction process.")
+
+        # Read the uploaded file as an image
+        image = Image.open(io.BytesIO(image_file.file.read()))
+        logger.info("Image successfully loaded.")
+
         # Perform OCR using Tesseract
         extracted_text = pytesseract.image_to_string(image)
-        
+        logger.info(f"Extracted text: {extracted_text}")
+
         if not extracted_text:
-            logging.warning("No text found in the image.")
             raise ValueError("No text found in the image.")
-        logging.info("OCR completed successfully.")
+        
+        logger.info("Text extraction successful.")
         return extracted_text.strip()
     except Exception as e:
-        print(f"Error extracting text: {e}")
+        logger.error(f"Error extracting text: {e}")
         return None
-  
