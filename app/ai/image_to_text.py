@@ -3,6 +3,7 @@ from fastapi import UploadFile
 from PIL import Image
 import pytesseract
 import io
+import logging
 
 def image_to_text(image_file: UploadFile) -> Union[str, None]:
     """
@@ -15,17 +16,23 @@ def image_to_text(image_file: UploadFile) -> Union[str, None]:
         str: The extracted text, or None if extraction fails.
     """
     try:
-        # Read the uploaded file as an image
-        # image = Image.open(image_file.file)
-        image = Image.open(io.BytesIO(image_file.file.read()))
+        logging.info("Reading image file...")
+        # Ensure file stream is properly read
+        contents = image_file.file.read()
+        image_file.file.seek(0)  # Reset the file pointer after reading
         
+        # Load the image from bytes
+        image = Image.open(io.BytesIO(contents))
+        logging.info("Performing OCR...")
         # Perform OCR using Tesseract
         extracted_text = pytesseract.image_to_string(image)
         
         if not extracted_text:
+            logging.warning("No text found in the image.")
             raise ValueError("No text found in the image.")
-        
+        logging.info("OCR completed successfully.")
         return extracted_text.strip()
     except Exception as e:
         print(f"Error extracting text: {e}")
         return None
+  
