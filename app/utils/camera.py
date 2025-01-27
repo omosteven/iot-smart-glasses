@@ -1,4 +1,5 @@
 import cv2
+import time
 from picamera2 import Picamera2
 
 def capture_frame():
@@ -16,7 +17,7 @@ def capture_frame_picamera2():
         camera_info = picam2.sensor_modes
         for mode in camera_info:
             print('each mode',mode)
-            
+
         picam2.configure(picam2.create_still_configuration())
         picam2.start()
         time.sleep(1)  # Allow the camera to warm up
