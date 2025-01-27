@@ -1,6 +1,19 @@
 import cv2
 import time
+import os
+import subprocess
 from picamera2 import Picamera2
+
+def kill_camera_processes():
+    """
+    Kills any processes using the camera devices (/dev/video* or /dev/media*).
+    """
+    try:
+        # Identify and kill all processes using /dev/video* and /dev/media*
+        subprocess.run("fuser -k /dev/video* /dev/media*", shell=True, check=False, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+        print("Killed all processes using the camera.")
+    except Exception as e:
+        print(f"Error while killing camera processes: {e}")
 
 def capture_frame():
     camera = cv2.VideoCapture(0)  # Use camera index 0
@@ -12,6 +25,7 @@ def capture_frame():
 
 def capture_frame_picamera2():
     try:
+        kill_camera_processes()
         # Initialize and configure the camera
         picam2 = Picamera2()
         camera_info = picam2.sensor_modes
