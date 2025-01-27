@@ -10,12 +10,19 @@ def capture_frame():
     return frame
 
 def capture_frame_picamera2():
-    picam2 = Picamera2()
-    picam2.configure(picam2.create_still_configuration())
-    picam2.start()
-    frame = picam2.capture_array()
-    picam2.stop()
-    return frame
+    try:
+        picam2 = Picamera2()
+        picam2.configure(picam2.create_still_configuration())
+        picam2.start()
+        frame = picam2.capture_array()
+        picam2.stop()
+
+        # Resize to reduce the image size
+        resized_frame = cv2.resize(frame, (1024, 576))
+        return resized_frame
+    except Exception as e:
+        print(f"Camera error: {e}")
+        raise
 
 def save_frame_as_jpg(frame, file_path="frame.jpg"):
     cv2.imwrite(file_path, frame)
