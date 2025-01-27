@@ -10,12 +10,13 @@ def capture_frame():
     return frame
 
 def capture_frame_picamera2():
-    from picamera2 import Picamera2
-    import time
-
     try:
         # Initialize and configure the camera
         picam2 = Picamera2()
+        camera_info = picam2.sensor_modes
+        for mode in camera_info:
+            print('each mode',mode)
+            
         picam2.configure(picam2.create_still_configuration())
         picam2.start()
         time.sleep(1)  # Allow the camera to warm up
@@ -40,7 +41,9 @@ def capture_frame_picamera2():
 def save_frame_as_jpg(frame, file_path="frame.jpg"):
     # cv2.imwrite(file_path, frame)
     # return file_path
-    resized_frame = cv2.resize(frame, (1024, 576))
-    # Save as JPEG
-    cv2.imwrite(file_path, resized_frame, [int(cv2.IMWRITE_JPEG_QUALITY), 90])  # Adjust quality as needed
+    # resized_frame = cv2.resize(frame, (1024, 576))
+    # # Save as JPEG
+    # cv2.imwrite(file_path, resized_frame, [int(cv2.IMWRITE_JPEG_QUALITY), 90])  # Adjust quality as needed
+    # return file_path
+    cv2.imwrite(file_path, frame)
     return file_path
