@@ -1,9 +1,10 @@
 import time
-from utils.camera import capture_frame, capture_frame_picamera2, save_frame_as_jpg
+from utils.camera import capture_frame, capture_frame_picamera2, kill_camera_processes, save_frame_as_jpg
 from utils.api_client import send_image_to_api
 
 def main():
     print("Starting real-time text extraction...")
+    kill_camera_processes()
     while True:
         try:
             # frame = capture_frame()

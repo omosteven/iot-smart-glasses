@@ -25,7 +25,6 @@ def capture_frame():
 
 def capture_frame_picamera2():
     try:
-        kill_camera_processes()
         # Initialize and configure the camera
         picam2 = Picamera2()
         camera_info = picam2.sensor_modes
