@@ -89,9 +89,9 @@ async def image_to_detection(image_file: UploadFile):
         # Object detection
         detections = detect_with_yolo(img_array,'yolo5s')
         detected_texts = extract_text_with_easyocr(img_array)
-        print('detected', detections)
+        # print('detected', detections)
         return {"detections": detections, "texts": detected_texts}
     except Exception as e:
-        print('error occurred',e)
+        # print('error occurred',e)
         logger.error(f"Error extracting text: {e}")
         return None

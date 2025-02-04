@@ -5,3 +5,10 @@ curl -O https://raw.githubusercontent.com/AlexeyAB/darknet/master/cfg/yolov4-tin
 curl -O https://github.com/AlexeyAB/darknet/releases/download/darknet_yolo_v4_pre/yolov4-tiny.weights
 Run The App On Local - uvicorn app.main:app --reload
 Run yolo export model=yolov8n.pt format=onnx to load yolo onnx
+
+sudo systemctl start nginx
+sudo systemctl daemon-reload
+sudo systemctl restart iot-smart-glasses.service
+sudo journalctl -u iot-smart-glasses.service -f   for logs
+sudo systemctl status iot-smart-glasses.service for status
+sudo systemctl status nginx

@@ -33,7 +33,6 @@ async def get_text_from_image(file: UploadFile = File(...)):
         raise HTTPException(status_code=400, detail="Invalid file type. Please upload an image.")
     
     extracted_text = await image_to_text(file)
-    print("An error here")
     if extracted_text is None:
         raise HTTPException(status_code=500, detail="2 Failed to extract text from the image.")
     
@@ -54,7 +53,6 @@ async def get_detection_from_image(file: UploadFile = File(...)):
         raise HTTPException(status_code=400, detail="Invalid file type. Please upload an image.")
     
     extracted_text = await image_to_detection(file)
-    print("An error here", extracted_text)
     if extracted_text is None:
         raise HTTPException(status_code=500, detail="2 Failed to extract text from the image.")
     

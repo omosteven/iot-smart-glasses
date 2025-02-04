@@ -6,6 +6,7 @@ import easyocr
 from PIL import Image
 import io
 import logging
+import pytesseract
 from ultralytics import YOLO
 
 logging.basicConfig(level=logging.INFO)
@@ -66,14 +67,13 @@ async def image_to_detection(image_file: UploadFile):
         if image.mode == "RGBA":
             image = image.convert("RGB")
 
-        img_resized = image.resize((320, 320))  # Resize for ONNX
+        img_resized = image.resize((1280, 1280)) 
         img_array = np.array(img_resized)  
 
-        detections = detect_with_yolo(img_array, 'yolo5s')
-        detected_texts = extract_text_with_easyocr(img_array)
-        print('detectd', detected_texts, detections)
+        detections = detect_with_yolo(img_array, 'yolo8n')
+        detected_texts = pytesseract.image_to_string(image)
+        # detected_texts = extract_text_with_easyocr(img_array)
         return {"detections": detections, "texts": detected_texts}
     except Exception as e:
-        print('error occurred',e)
         logger.error(f"Error extracting text: {e}")
         return None
