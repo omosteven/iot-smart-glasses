@@ -10,7 +10,12 @@ async def get_example():
 @router.post("/image-to-text")
 async def image_to_text(file: UploadFile = File(...)):
     print(f"Received file: {file.filename}, size: {file.size}, type: {file.content_type}")
-    return services.get_text_from_image(file)
+    return await services.get_text_from_image(file)
+
+@router.post("/image-cv")
+async def image_to_detection(file: UploadFile = File(...)):
+    print(f"Received file: {file.filename}, size: {file.size}, type: {file.content_type}")
+    return await services.get_detection_from_image(file)
 
 @router.get("/receive-device-connectivity")
 async def receive_device_connectivity():
