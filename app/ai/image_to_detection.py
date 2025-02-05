@@ -1,8 +1,8 @@
 
 from fastapi import UploadFile
-import torch
+# import torch
 import numpy as np
-import easyocr
+# import easyocr
 from PIL import Image
 import io
 import logging
@@ -13,19 +13,19 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 
-yolo8_model = torch.hub.load('ultralytics/yolov5', 'yolov5s')
-yolo5n_model = torch.hub.load('ultralytics/yolov5', 'yolov5n')
-yolo5s_model = torch.hub.load('ultralytics/yolov5', 'yolov5s')
+# yolo8_model = torch.hub.load('ultralytics/yolov5', 'yolov5s')
+# yolo5n_model = torch.hub.load('ultralytics/yolov5', 'yolov5n')
+# yolo5s_model = torch.hub.load('ultralytics/yolov5', 'yolov5s')
 yolo8n_model = YOLO('yolov8n.pt')  
-yolo8s_model = YOLO('yolov8s.pt')
+# yolo8s_model = YOLO('yolov8s.pt')
 
-reader = easyocr.Reader(["en"]) 
+# reader = easyocr.Reader(["en"]) 
 
 models = {
     'yolo8n': yolo8n_model,
-    'yolo8s': yolo8s_model,
-    'yolo5n': yolo5n_model,
-    'yolo5s': yolo5s_model
+    # 'yolo8s': yolo8s_model,
+    # 'yolo5n': yolo5n_model,
+    # 'yolo5s': yolo5s_model
 }
 
 def detect_with_yolo(img_array, model_name='yolo5s'):
@@ -50,13 +50,13 @@ def detect_with_yolo(img_array, model_name='yolo5s'):
     ]
 
 
-def extract_text_with_easyocr(img_array):
-    text_results = reader.readtext(img_array)
+# def extract_text_with_easyocr(img_array):
+#     text_results = reader.readtext(img_array)
     
-    # Concatenate all the detected text into a single string
-    concatenated_text = " ".join([text for _, text, _ in text_results])
+#     # Concatenate all the detected text into a single string
+#     concatenated_text = " ".join([text for _, text, _ in text_results])
     
-    return concatenated_text
+#     return concatenated_text
 
      
 async def image_to_detection(image_file: UploadFile):
