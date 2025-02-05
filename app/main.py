@@ -1,9 +1,15 @@
 import time
-from utils.camera import capture_frame, capture_frame_picamera2, save_frame_as_jpg
+# from utils.camera import capture_frame, capture_frame_picamera2, save_frame_as_jpg
 from utils.api_client import send_image_to_api
+from utils.sound import speak_text
 
+texts = ["Hello", "Hi Steven", "This thing must work", "Hello, this is a test on Raspberry Pi."]
 def main():
     print("Starting real-time text extraction...")
+    
+    for tt in texts:
+        speak_text(tt)
+    return
     while True:
         try:
             # frame = capture_frame()
