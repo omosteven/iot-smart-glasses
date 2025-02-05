@@ -4,4 +4,4 @@ ultralytics
 easyocr 
 opencv-python 
 numpy 
-torch=2.6.0
+torch==2.6.0
