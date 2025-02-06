@@ -17,7 +17,31 @@ def main():
             image_path = save_frame_as_jpg(frame)
             response = send_image_to_api(image_path)
             print(f"Response: {response}")
-            
+                        # Validate response structure
+            if not isinstance(response, dict) or "data" not in response:
+                print("Error: Unexpected response format")
+                continue
+
+            data = response.get("data", {})
+            detections = data.get("detections", [])
+            text = data.get("text", "").strip()
+
+            # Handle detections
+            if isinstance(detections, list) and detections:
+                print("Detections:")
+                for detection in detections:
+                    if isinstance(detection, dict) and "object" in detection:
+                        print(f"found - {detection['object']}")
+                    else:
+                        print("Error: Invalid detection format")
+            else:
+                print("No detections")
+
+            # Handle text output
+            if text:
+                print(f"Extracted Text: {text}")
+            else:
+                print("No extracted text")
             # Add logic for breaking the loop (e.g., press 'q' to exit)
             time.sleep(1)  # Delay for real-time responsiveness
         except Exception as e:
