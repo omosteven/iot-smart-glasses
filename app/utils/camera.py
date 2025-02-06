@@ -55,9 +55,9 @@ def capture_frame_picamera2():
 def save_frame_as_jpg(frame, file_path="frame.jpg"):
     # cv2.imwrite(file_path, frame)
     # return file_path
-    # resized_frame = cv2.resize(frame, (1024, 576))
+    resized_frame = cv2.resize(frame, (640, 640))
     # # Save as JPEG
-    # cv2.imwrite(file_path, resized_frame, [int(cv2.IMWRITE_JPEG_QUALITY), 90])  # Adjust quality as needed
-    # return file_path
+    cv2.imwrite(file_path, resized_frame, [int(cv2.IMWRITE_JPEG_QUALITY), 90])  # Adjust quality as needed
+    return file_path
     cv2.imwrite(file_path, frame)
     return file_path
