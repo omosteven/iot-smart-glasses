@@ -1,91 +1,118 @@
 import time
 import asyncio
 import pyttsx3
+import cv2
 from concurrent.futures import ThreadPoolExecutor
-from utils.camera import capture_frame_picamera2, save_frame_as_jpg
+from picamera2 import Picamera2
 from utils.api_client import send_image_to_api
+
+# Initialize global queue for speech text
+speech_queue = asyncio.Queue()
+frame_queue = asyncio.Queue()
 
 # Initialize pyttsx3 engine once
 engine = pyttsx3.init()
-engine.setProperty('rate', 130)  # Adjust for clarity
+engine.setProperty('rate', 130)  # Adjust speed for better clarity
 engine.setProperty('volume', 1.0)  # Ensure max volume
-
-# Select a clear voice
 voices = engine.getProperty('voices')
 if voices:
     engine.setProperty('voice', voices[0].id)
 
-# ThreadPoolExecutor for handling blocking calls
+# ThreadPoolExecutor for blocking tasks
 executor = ThreadPoolExecutor()
 
+# Keep camera initialized
+picam2 = Picamera2()
+picam2.configure(picam2.create_still_configuration())
+picam2.start()
+time.sleep(1)  # Warm-up time
+
+def capture_frame():
+    """ Capture a frame without re-initializing the camera """
+    try:
+        return picam2.capture_array()
+    except Exception as e:
+        print(f"Camera error: {e}")
+        return None
+
+def save_frame_as_jpg(frame, file_path="frame.jpg"):
+    """ Save the captured frame as a JPEG file """
+    if frame is None:
+        return None
+    resized_frame = cv2.resize(frame, (640, 640))
+    cv2.imwrite(file_path, resized_frame, [int(cv2.IMWRITE_JPEG_QUALITY), 90])
+    return file_path
+
 def speak_text(text: str):
-    """ Speak text in a separate thread without blocking the main loop """
-    if not text.strip():
-        return  # Skip empty text
-    
-    def run_tts():
+    """ Speak text using pyttsx3 in a separate thread """
+    if text.strip():
         engine.say(text)
         engine.runAndWait()
 
-    future = executor.submit(run_tts)
-    return future  # Return future to track completion
+async def speech_worker():
+    """ Background task to process speech queue """
+    while True:
+        text = await speech_queue.get()
+        future = executor.submit(speak_text, text)
+        while engine.isBusy():
+            await asyncio.sleep(0.1)
+        speech_queue.task_done()
 
-async def process_frame():
-    """ Capture image, send to API, and process detections """
-    try:
-        # Capture frame and send to API asynchronously
+async def capture_worker():
+    """ Continuously capture frames and store in queue """
+    while True:
+        frame = await asyncio.get_running_loop().run_in_executor(executor, capture_frame)
+        if frame is not None:
+            await frame_queue.put(frame)
+        await asyncio.sleep(0.1)  # Small delay to prevent overload
+
+async def process_worker():
+    """ Process frames from queue: save, send to API, and handle response """
+    while True:
+        frame = await frame_queue.get()
         loop = asyncio.get_running_loop()
-        frame = await loop.run_in_executor(executor, capture_frame_picamera2)
+
+        # Save frame asynchronously
         image_path = await loop.run_in_executor(executor, save_frame_as_jpg, frame)
+        if not image_path:
+            frame_queue.task_done()
+            continue
+
+        # Send image to API asynchronously
         response = await loop.run_in_executor(executor, send_image_to_api, image_path)
 
-        # Validate response structure
+        # Validate response
         if not isinstance(response, dict) or "data" not in response:
             print("Error: Unexpected response format")
-            return "Error in processing"
+            frame_queue.task_done()
+            continue
 
         data = response.get("data", {})
         detections = data.get("detections", [])
         text = data.get("text", "").strip()
 
-        # Process detections
         detected_objects = [d["object"] for d in detections if isinstance(d, dict) and "object" in d]
-
-        # Build speech text
         spoken_text = "I found " + (", ".join(detected_objects) if detected_objects else "nothing")
         spoken_text += f" and the text in front is {text}" if text else " and no text"
 
-        return spoken_text
-
-    except Exception as e:
-        print(f"Error: {e}")
-        return "An error occurred"
+        await speech_queue.put(spoken_text)
+        frame_queue.task_done()
 
 async def main():
-    """ Main loop to capture, process, and speak text asynchronously """
-    print("Starting real-time text extraction...")
+    """ Main async function to start all background tasks """
+    print("Starting real-time processing...")
+
+    # Start workers
+    asyncio.create_task(speech_worker())
+    asyncio.create_task(capture_worker())
+    asyncio.create_task(process_worker())
 
     while True:
-        try:
-            speech_future = None  # Track active speech
-
-            # Capture, process frame, and get response text
-            spoken_text = await process_frame()
-            print(f"Speaking: {spoken_text}")
-
-            # Speak the response asynchronously
-            speech_future = speak_text(spoken_text)
-
-            # Wait for speech to finish before the next cycle
-            if speech_future:
-                while engine.isBusy():  # Detect when speech is done
-                    time.sleep(0.1)
-
-            await asyncio.sleep(1)  # Avoid overwhelming the system
-
-        except Exception as e:
-            print(f"Main loop error: {e}")
-            break
+        await asyncio.sleep(1)  # Keep loop alive
 
 if __name__ == "__main__":
-    asyncio.run(main())
+    try:
+        asyncio.run(main())
+    except KeyboardInterrupt:
+        print("Stopping...")
+        picam2.stop()
