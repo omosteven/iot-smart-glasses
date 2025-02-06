@@ -67,7 +67,7 @@ async def image_to_detection(image_file: UploadFile):
         if image.mode == "RGBA":
             image = image.convert("RGB")
 
-        img_resized = image.resize((1280, 1280)) 
+        img_resized = image.resize((320, 320)) 
         img_array = np.array(img_resized)  
 
         detections = detect_with_yolo(img_array, 'yolo8n')
