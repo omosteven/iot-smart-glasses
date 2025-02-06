@@ -5,7 +5,8 @@ import urllib3
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 def send_image_to_api(image_path):
-    url = "https://18.198.217.46/api/v1/image-to-text"
+    # url = "https://18.198.217.46/api/v1/image-to-text"
+    url = "https://18.198.217.46/api/v1/image-cv"
     try:
         with open(image_path, 'rb') as img_file:
             # Match the form-data key and include the correct MIME type
