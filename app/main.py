@@ -20,6 +20,7 @@ def main():
                         # Validate response structure
             if not isinstance(response, dict) or "data" not in response:
                 print("Error: Unexpected response format")
+                speak_text("Error in processing")
                 continue
 
             data = response.get("data", {})
@@ -28,29 +29,34 @@ def main():
 
             # Handle detections
             texts = ""
+            detected_objects = []
             if isinstance(detections, list) and detections:
                 print("Detections:")
 
                 for detection in detections:
                     if isinstance(detection, dict) and "object" in detection:
                         print(f"found - {detection['object']}")
-                        text+= f"{detection['object']} , "
+                        detected_objects.append(detection['object'])
                     else:
                         print("Error: Invalid detection format")
             else:
                 print("No detections")
 
+            spoken_text = "I found "
+            if detected_objects:
+                spoken_text += ", ".join(detected_objects)
+            else:
+                spoken_text += "nothing"
+
             # Handle text output
             if text:
                 print(f"Extracted Text: {text}")
-                texts+= f" and text in front is {text}"
+                spoken_text += f" and the text in front is {text}"
             else:
                 print("No extracted text")
-                texts+= "and no text"
-            if(len(texts)>1):
-                speak_text(f"I found {texts} at the front")
-            else:
-                speak_text("Nothing was found")
+                spoken_text += "and no text"
+            
+            speak_text(spoken_text)
             # Add logic for breaking the loop (e.g., press 'q' to exit)
             time.sleep(1)  # Delay for real-time responsiveness
         except Exception as e:

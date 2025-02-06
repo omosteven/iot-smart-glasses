@@ -1,18 +1,23 @@
 import pyttsx3
+import time
 
 engine = pyttsx3.init()
 
-def speak_text(text: str):
-    # Optimize for speed and efficiency
-    engine.setProperty('rate', 150)  # Adjust speed (default is ~200)
-    engine.setProperty('volume', 1.0)  # Set volume to max
-    
-    # Choose a lightweight voice
-    voices = engine.getProperty('voices')
-    engine.setProperty('voice', voices[0].id)  # Select the first available voice
+# Set up engine properties once (prevents re-initialization overhead)
+engine.setProperty('rate', 130)  # Slower speed for clarity (Default is ~200)
+engine.setProperty('volume', 1.0)  # Max volume
 
+# Try selecting a clearer voice
+voices = engine.getProperty('voices')
+if voices:
+    engine.setProperty('voice', voices[0].id)  # Pick the first available voice
+
+def speak_text(text: str):
+    if not text.strip():
+        return  # Avoid speaking empty text
+    
     engine.say(text)
     engine.runAndWait()
-
-# Example usage
-
+    
+    # Add a short pause to ensure the text is fully spoken
+    time.sleep(0.5)
