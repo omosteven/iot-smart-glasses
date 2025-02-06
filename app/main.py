@@ -1,7 +1,7 @@
 import time
 from utils.camera import capture_frame, capture_frame_picamera2, save_frame_as_jpg
 from utils.api_client import send_image_to_api
-# from utils.sound import speak_text
+from utils.sound import speak_text
 
 texts = ["Hello", "Hi Steven", "This thing must work", "Hello, this is a test on Raspberry Pi."]
 def main():
@@ -27,11 +27,14 @@ def main():
             text = data.get("text", "").strip()
 
             # Handle detections
+            texts = ""
             if isinstance(detections, list) and detections:
                 print("Detections:")
+
                 for detection in detections:
                     if isinstance(detection, dict) and "object" in detection:
                         print(f"found - {detection['object']}")
+                        text+= f"{detection['object']} , "
                     else:
                         print("Error: Invalid detection format")
             else:
@@ -40,8 +43,14 @@ def main():
             # Handle text output
             if text:
                 print(f"Extracted Text: {text}")
+                texts+= f" and text in front is {text}"
             else:
                 print("No extracted text")
+                texts+= "and no text"
+            if(len(texts)>1):
+                speak_text(f"I found {texts} at the front")
+            else:
+                speak_text("Nothing was found")
             # Add logic for breaking the loop (e.g., press 'q' to exit)
             time.sleep(1)  # Delay for real-time responsiveness
         except Exception as e:
