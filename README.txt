@@ -12,3 +12,5 @@ sudo systemctl restart iot-smart-glasses.service
 sudo journalctl -u iot-smart-glasses.service -f   for logs
 sudo systemctl status iot-smart-glasses.service for status
 sudo systemctl status nginx
+sudo tail -f /var/log/nginx/error.log for nginx logs
+sudo tail -f /var/log/iot-smart-glasses.log for real time logs
