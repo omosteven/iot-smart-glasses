@@ -1,5 +1,6 @@
 import pyttsx3
 import time
+import subprocess
 
 engine = pyttsx3.init()
 
@@ -21,3 +22,13 @@ def speak_text(text: str):
     
     # Add a short pause to ensure the text is fully spoken
     time.sleep(0.5)
+
+def text_to_speech(text):
+    """Convert text to speech using Piper."""
+    command = ["piper", "--model", "/usr/share/piper/en_US-lessac.onnx", "--text", text]
+    subprocess.run(command)
+
+if __name__ == "__main__":
+    text_to_speech("Hello, I am your assistant. How can I help you?")
+    
+# speak_text("Hello World")

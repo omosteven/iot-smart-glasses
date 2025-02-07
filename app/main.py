@@ -23,7 +23,7 @@ executor = ThreadPoolExecutor(max_workers=3)
 
 # Keep camera initialized
 picam2 = Picamera2()
-picam2.configure(picam2.create_still_configuration({"size": (1280, 720)}))  # Reduce resolution
+picam2.configure(picam2.create_still_configuration({"size": (640, 640)}))  # Reduce resolution
 picam2.start()
 time.sleep(1)  # Allow warm-up
 
