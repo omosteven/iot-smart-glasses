@@ -6,80 +6,70 @@ from concurrent.futures import ThreadPoolExecutor
 from picamera2 import Picamera2
 from utils.api_client import send_image_to_api
 
-# Initialize global queue for speech text
-speech_queue = asyncio.Queue()
-frame_queue = asyncio.Queue()
+# Global queues for speech and frames
+speech_queue = asyncio.Queue(maxsize=5)  # Prevent excessive memory usage
+frame_queue = asyncio.Queue(maxsize=1)   # Only process one frame at a time
 
-# Initialize pyttsx3 engine once
+# Initialize pyttsx3 once
 engine = pyttsx3.init()
-engine.setProperty('rate', 130)  # Adjust speed for better clarity
-engine.setProperty('volume', 1.0)  # Ensure max volume
+engine.setProperty('rate', 130)
+engine.setProperty('volume', 1.0)
 voices = engine.getProperty('voices')
 if voices:
     engine.setProperty('voice', voices[0].id)
 
 # ThreadPoolExecutor for blocking tasks
-executor = ThreadPoolExecutor()
+executor = ThreadPoolExecutor(max_workers=3)
 
 # Keep camera initialized
 picam2 = Picamera2()
-picam2.configure(picam2.create_still_configuration())
+picam2.configure(picam2.create_still_configuration({"size": (1280, 720)}))  # Reduce resolution
 picam2.start()
-time.sleep(1)  # Warm-up time
+time.sleep(1)  # Allow warm-up
 
 def capture_frame():
-    """ Capture a frame without re-initializing the camera """
+    """ Capture a frame and save it without re-initializing the camera """
     try:
-        return picam2.capture_array()
+        image_path = "/tmp/frame.jpg"  # Use tmp directory to reduce disk writes
+        picam2.capture_file(image_path)
+        return image_path
     except Exception as e:
         print(f"Camera error: {e}")
         return None
 
-def save_frame_as_jpg(frame, file_path="frame.jpg"):
-    """ Save the captured frame as a JPEG file """
-    if frame is None:
-        return None
-    resized_frame = cv2.resize(frame, (640, 640))
-    cv2.imwrite(file_path, resized_frame, [int(cv2.IMWRITE_JPEG_QUALITY), 90])
-    return file_path
-
 def speak_text(text: str):
-    """ Speak text using pyttsx3 in a separate thread """
+    """ Speak text using pyttsx3 (blocking task) """
     if text.strip():
         engine.say(text)
         engine.runAndWait()
 
 async def speech_worker():
-    """ Background task to process speech queue """
+    """ Background task for speaking text from queue """
     while True:
         text = await speech_queue.get()
-        future = executor.submit(speak_text, text)
-        while engine.isBusy():
-            await asyncio.sleep(0.1)
+        await asyncio.get_running_loop().run_in_executor(executor, speak_text, text)
         speech_queue.task_done()
 
 async def capture_worker():
-    """ Continuously capture frames and store in queue """
+    """ Continuously capture frames and store them in the queue """
     while True:
-        frame = await asyncio.get_running_loop().run_in_executor(executor, capture_frame)
-        if frame is not None:
-            await frame_queue.put(frame)
-        await asyncio.sleep(0.1)  # Small delay to prevent overload
+        if frame_queue.full():  
+            await asyncio.sleep(0.1)  # Avoid overloading queue
+            continue
+        
+        frame_path = await asyncio.get_running_loop().run_in_executor(executor, capture_frame)
+        if frame_path:
+            await frame_queue.put(frame_path)
+        await asyncio.sleep(0.2)  # Limit capture rate
 
 async def process_worker():
-    """ Process frames from queue: save, send to API, and handle response """
+    """ Process frames from queue: send to API, process response, queue speech """
     while True:
-        frame = await frame_queue.get()
+        frame_path = await frame_queue.get()
         loop = asyncio.get_running_loop()
 
-        # Save frame asynchronously
-        image_path = await loop.run_in_executor(executor, save_frame_as_jpg, frame)
-        if not image_path:
-            frame_queue.task_done()
-            continue
-
         # Send image to API asynchronously
-        response = await loop.run_in_executor(executor, send_image_to_api, image_path)
+        response = await loop.run_in_executor(executor, send_image_to_api, frame_path)
 
         # Validate response
         if not isinstance(response, dict) or "data" not in response:
@@ -95,12 +85,14 @@ async def process_worker():
         spoken_text = "I found " + (", ".join(detected_objects) if detected_objects else "nothing")
         spoken_text += f" and the text in front is {text}" if text else " and no text"
 
-        await speech_queue.put(spoken_text)
+        if not speech_queue.full():  # Prevent overloading speech queue
+            await speech_queue.put(spoken_text)
+
         frame_queue.task_done()
 
 async def main():
     """ Main async function to start all background tasks """
-    print("Starting real-time processing...")
+    print("Starting optimized real-time processing...")
 
     # Start workers
     asyncio.create_task(speech_worker())
