@@ -34,6 +34,7 @@ async def get_text_from_image(file: UploadFile = File(...)):
     
     extracted_text = await image_to_text(file)
     if extracted_text is None:
+        print('2 error', extracted_text)
         raise HTTPException(status_code=500, detail="2 Failed to extract text from the image.")
     
     return {"data": extracted_text, "message":"success"}

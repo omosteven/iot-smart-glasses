@@ -9,7 +9,7 @@ async def get_example():
 
 @router.post("/image-to-text")
 async def image_to_text(file: UploadFile = File(...)):
-    # print(f"Received file: {file.filename}, size: {file.size}, type: {file.content_type}")
+    print(f"Received file: {file.filename}, size: {file.size}, type: {file.content_type}")
     return await services.get_text_from_image(file)
 
 @router.post("/image-cv")

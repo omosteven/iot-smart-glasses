@@ -36,5 +36,6 @@ async def image_to_text(image_file: UploadFile) -> Union[str, None]:
         logger.info("Text extraction successful.")
         return extracted_text.strip()
     except Exception as e:
+        print('error1:', e)
         logger.error(f"Error extracting text: {e}")
         return None

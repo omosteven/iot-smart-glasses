@@ -4,8 +4,10 @@ import logging
 from concurrent.futures import ThreadPoolExecutor
 from fastapi import UploadFile
 import numpy as np
+import cv2
 from PIL import Image
 import pytesseract
+import re
 from ultralytics import YOLO
 
 logging.basicConfig(level=logging.INFO)
@@ -19,6 +21,18 @@ yolo8n_model = YOLO('yolov8n.pt')
 # yolo5s_model = torch.hub.load('ultralytics/yolov5', 'yolov5s')
 # Model dictionary
 models = {'yolo8n': yolo8n_model}
+
+def preprocess_for_yolo(image: Image.Image):
+    """Preprocess image to optimize for YOLO detection."""
+    img_array = np.array(image)
+
+    # Resize image to expected input size for YOLO (640x640 is default for YOLOv8n)
+    img_array = cv2.resize(img_array, (640, 640))
+
+    # Normalize pixel values (YOLO expects values between 0-1)
+    img_array = img_array / 255.0
+
+    return img_array
 
 def detect_with_yolo(img_array, model_name='yolo8n'):
     """Run object detection with YOLO model."""
@@ -37,9 +51,60 @@ def detect_with_yolo(img_array, model_name='yolo8n'):
         for r in results for box in r.boxes
     ]
 
+
+
+def clean_text(text: str):
+    print('actual text:', text)
+    """Clean OCR extracted text by removing unwanted characters."""
+    text = re.sub(r'[^a-zA-Z0-9,.:\-%\s]', '', text)  # Keep only useful characters
+    text = re.sub(r'\s+', ' ', text).strip()  # Normalize spaces
+    return text
+
+def needs_preprocessing(image: Image.Image):
+    """Determine if the image needs preprocessing based on contrast levels."""
+    gray = np.array(image.convert("L"))
+    
+    # Compute the standard deviation of pixel intensities (contrast indicator)
+    contrast = gray.std()
+
+    logger.info(f"Image contrast level: {contrast}")
+    print('conr:', contrast)
+    # If contrast is below a threshold, apply preprocessing
+    return contrast < 30  # Adjust threshold based on testing
+
+
+def preprocess_image(image: Image.Image):
+    """Preprocess image to enhance OCR accuracy."""
+    # Convert image to grayscale
+    gray = np.array(image.convert("L"))
+
+    # Apply bilateral filtering (removes noise while keeping edges sharp)
+    gray = cv2.bilateralFilter(gray, 9, 75, 75)
+
+    # Adaptive thresholding to enhance text contrast
+    processed_img = cv2.adaptiveThreshold(
+        gray, 255, cv2.ADAPTIVE_THRESH_GAUSSIAN_C, cv2.THRESH_BINARY, 11, 2
+    )
+
+    # Sharpening using an unsharp mask
+    blurred = cv2.GaussianBlur(processed_img, (0, 0), 3)
+    sharpened = cv2.addWeighted(processed_img, 1.5, blurred, -0.5, 0)
+
+    return Image.fromarray(sharpened)
+
 def extract_text_with_tesseract(image: Image.Image):
-    """Extract text using Tesseract OCR."""
-    return pytesseract.image_to_string(image)
+    """Extract text using Tesseract OCR with optimized preprocessing."""
+    # processed_img = preprocess_image(image)
+    if needs_preprocessing(image):
+        logger.info("Applying preprocessing due to low contrast.")
+    image = preprocess_image(image)
+
+    # OCR config to improve text recognition
+    custom_config = "--oem 3 --psm 4 -c preserve_interword_spaces=1"
+    extracted_text = pytesseract.image_to_string(image, config=custom_config)
+
+    logger.info(f"Extracted Text:\n{extracted_text.strip()}")
+    return clean_text(extracted_text.strip())
 
 async def image_to_detection(image_file: UploadFile):
     """Process image for object detection and text extraction concurrently."""
