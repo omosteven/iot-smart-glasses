@@ -57,13 +57,13 @@ async def capture_worker():
     """ Continuously capture frames and store them in the queue """
     while True:
         if frame_queue.full():  
-            await asyncio.sleep(0.1)  # Avoid overloading queue
+            await asyncio.sleep(1)  # Avoid overloading queue
             continue
         
         frame_path = await asyncio.get_running_loop().run_in_executor(executor, capture_frame)
         if frame_path:
             await frame_queue.put(frame_path)
-        await asyncio.sleep(0.2)  # Limit capture rate
+        await asyncio.sleep(1)  # Limit capture rate
 
 async def process_worker():
     """ Process frames from queue: send to API, process response, queue speech """
