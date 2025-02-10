@@ -28,7 +28,7 @@ picam2.configure(picam2.create_video_configuration({"size": (640, 640)}))
 picam2.set_controls({"ExposureTime": 5000})  # 5000µs = 5ms
 picam2.set_controls({"AnalogueGain": 1.5}) 
 picam2.start()
-time.sleep(2)  # Allow warm-up
+time.sleep(10)  # Allow warm-up
 
 def capture_frame():
     """ Capture a frame and save it without re-initializing the camera """
