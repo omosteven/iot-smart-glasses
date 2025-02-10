@@ -23,9 +23,12 @@ executor = ThreadPoolExecutor(max_workers=3)
 
 # Keep camera initialized
 picam2 = Picamera2()
-picam2.configure(picam2.create_still_configuration({"size": (640, 640)}))  # Reduce resolution
+picam2.configure(picam2.create_video_configuration({"size": (640, 640)}))
+# picam2.configure(picam2.create_still_configuration({"size": (640, 640)}))  # Reduce resolution
+picam2.set_controls({"ExposureTime": 5000})  # 5000µs = 5ms
+picam2.set_controls({"AnalogueGain": 1.5}) 
 picam2.start()
-time.sleep(1)  # Allow warm-up
+time.sleep(2)  # Allow warm-up
 
 def capture_frame():
     """ Capture a frame and save it without re-initializing the camera """
