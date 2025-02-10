@@ -84,7 +84,7 @@ async def process_worker():
         detected_objects = [d["object"] for d in detections if isinstance(d, dict) and "object" in d]
         spoken_text = "I found " + (", ".join(detected_objects) if detected_objects else "nothing")
         spoken_text += f" and the text in front is {text}" if text else " and no text"
-
+        print('speaking:', spoken_text)
         if not speech_queue.full():  # Prevent overloading speech queue
             await speech_queue.put(spoken_text)
 
@@ -95,7 +95,7 @@ async def main():
     print("Starting optimized real-time processing...")
 
     # Start workers
-    asyncio.create_task(speech_worker())
+    # asyncio.create_task(speech_worker())
     asyncio.create_task(capture_worker())
     asyncio.create_task(process_worker())
 
