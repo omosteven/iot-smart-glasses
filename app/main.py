@@ -45,7 +45,7 @@ executor = ThreadPoolExecutor(max_workers=3)
 
 # Keep camera initialized
 picam2 = Picamera2()
-camera_config = picam2.create_still_configuration({"size": (1280, 1280)})  # Max res for Camera 3
+camera_config = picam2.create_still_configuration({"size": (640, 640)})  # Max res for Camera 3
 # camera_config = picam2.create_still_configuration({"size": (4608, 2592)})  # Max res for Camera 3
 picam2.configure(camera_config)
 # picam2.configure(picam2.create_still_configuration({"size": (640, 640)}))  # Reduce resolution
