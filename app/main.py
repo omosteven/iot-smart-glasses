@@ -60,6 +60,7 @@ time.sleep(2)  # Allow warm-up
 def capture_frame():
     """ Capture a frame and save it without re-initializing the camera """
     try:
+        start_time = time.time()
         image_path = "/tmp/frame.jpg"  # Use tmp directory to reduce disk writes
         picam2.set_controls({"AfTrigger": 0})  # Start autofocus
         time.sleep(0.5)  # Allow focus to adjust
@@ -67,6 +68,8 @@ def capture_frame():
         
         # Capture image
         picam2.capture_file(image_path)
+        elapsed = time.time() - start_time
+        print(f"Capturing completed in {elapsed:.2f} sec")
         return image_path
     except Exception as e:
         print(f"Camera error: {e}")
@@ -108,6 +111,7 @@ async def speech_worker():
 async def capture_worker():
     """ Continuously capture frames and store them in the queue """
     while True:
+        start_time = time.time()
         if frame_queue.full():  
             await asyncio.sleep(0.2)  # Avoid overloading queue
             continue
@@ -115,6 +119,8 @@ async def capture_worker():
         frame_path = await asyncio.get_running_loop().run_in_executor(executor, capture_frame)
         if frame_path:
             await frame_queue.put(frame_path)
+            elapsed = time.time() - start_time
+            print(f"Capturing processs took {elapsed:.2f} sec")
         await asyncio.sleep(0.2)  # Limit capture rate
 
 async def process_worker():
