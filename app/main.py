@@ -93,6 +93,7 @@ async def process_worker():
         data = response.get("data", {})
         detections = data.get("detections", [])
         text = data.get("text", "").strip()
+        print('resp:', response, 'data:',data)
 
         detected_objects = [d["object"] for d in detections if isinstance(d, dict) and "object" in d]
         spoken_text = "I found " + (", ".join(detected_objects) if detected_objects else "nothing")
