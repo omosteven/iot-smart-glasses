@@ -80,25 +80,31 @@ async def process_worker():
     while True:
         frame_path = await frame_queue.get()
         loop = asyncio.get_running_loop()
+        spoken_text = ""
+        try:
+            # Send image to API asynchronously
+            response = await loop.run_in_executor(executor, send_image_to_api, frame_path)
 
-        # Send image to API asynchronously
-        response = await loop.run_in_executor(executor, send_image_to_api, frame_path)
+            # Ensure response is a dictionary
+            if not isinstance(response, dict):
+                raise ValueError("Invalid API response format")
 
-        # Validate response
-        if not isinstance(response, dict) or "data" not in response:
-            print("Error: Unexpected response format")
-            frame_queue.task_done()
-            continue
+            data = response.get("data", {})
 
-        data = response.get("data", {})
-        
-        extracted_text = data.get("texts", "").strip()  # FIXED
+            # Extract text safely
+            extracted_text = data.get("texts", "").strip()
 
-        detections = data.get("detections", [])
-        detected_objects = [d.get("object", "") for d in detections if isinstance(d, dict)]
+            # Extract detections safely
+            detections = data.get("detections", [])
+            detected_objects = [d.get("object", "") for d in detections if isinstance(d, dict)]
 
-        spoken_text = "I found " + (", ".join(detected_objects) if detected_objects else "nothing")
-        spoken_text += f" and the text in front is: {extracted_text}" if extracted_text else " and no text"
+            # Construct spoken message
+            spoken_text = "I found " + (", ".join(detected_objects) if detected_objects else "nothing")
+            spoken_text += f" and the text in front is: {extracted_text}" if extracted_text else " and no text"
+
+        except Exception as e:
+            print(f"API call error: {e}")
+            spoken_text = "An error occurred while making API call."
 
         print('speaking:', spoken_text)
 
