@@ -2,10 +2,32 @@ import time
 import asyncio
 import pyttsx3
 import cv2
+import subprocess
 from concurrent.futures import ThreadPoolExecutor
 from picamera2 import Picamera2
 from utils.api_client import send_image_to_api
 
+
+def release_camera():
+    """Check if /dev/video0 is in use and kill the process using it."""
+    try:
+        result = subprocess.run(["lsof", "/dev/video0"], capture_output=True, text=True)
+        lines = result.stdout.strip().split("\n")
+
+        # Ignore header line, process any remaining lines
+        for line in lines[1:]:
+            parts = line.split()
+            if len(parts) > 1:  
+                pid = parts[1]  # PID is the second column
+                print(f"Killing process {pid} using /dev/video0...")
+                subprocess.run(["sudo", "kill", "-9", pid])
+        
+        time.sleep(1)  # Give time for process cleanup
+
+    except Exception as e:
+        print(f"Error while checking camera process: {e}")
+
+release_camera()
 # Global queues for speech and frames
 speech_queue = asyncio.Queue(maxsize=5)  # Prevent excessive memory usage
 frame_queue = asyncio.Queue(maxsize=1)   # Only process one frame at a time
@@ -57,10 +79,24 @@ def speak_text(text: str):
         engine.runAndWait()
 
 async def speech_worker():
-    """ Background task for speaking text from queue """
+    """ Background task for speaking text from queue with retry mechanism """
     while True:
         text = await speech_queue.get()
-        await asyncio.get_running_loop().run_in_executor(executor, speak_text, text)
+        success = False
+        max_retries = 3  # Retry up to 3 times
+        
+        for attempt in range(max_retries):
+            try:
+                await asyncio.get_running_loop().run_in_executor(executor, speak_text, text)
+                success = True
+                break  # Exit loop on success
+            except Exception as e:
+                print(f"Speech synthesis failed (Attempt {attempt + 1}): {e}")
+                await asyncio.sleep(1)  # Small delay before retrying
+        
+        if not success:
+            print(f"Skipping speech output after {max_retries} failed attempts: {text}")
+        
         speech_queue.task_done()
 
 async def capture_worker():
@@ -118,7 +154,7 @@ async def main():
     print("Starting optimized real-time processing...")
 
     # Start workers
-    # asyncio.create_task(speech_worker())
+    asyncio.create_task(speech_worker())
     asyncio.create_task(capture_worker())
     asyncio.create_task(process_worker())
 
