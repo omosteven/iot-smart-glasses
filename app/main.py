@@ -75,8 +75,11 @@ def capture_frame():
 def speak_text(text: str):
     """ Speak text using pyttsx3 (blocking task) """
     if text.strip():
+        start_time = time.time()
         engine.say(text)
         engine.runAndWait()
+        elapsed = time.time() - start_time
+        print(f"Speach completed in {elapsed:.2f} sec")
 
 async def speech_worker():
     """ Background task for speaking text from queue with retry mechanism """
@@ -87,7 +90,10 @@ async def speech_worker():
         
         for attempt in range(max_retries):
             try:
+                start_time = time.time()
                 await asyncio.get_running_loop().run_in_executor(executor, speak_text, text)
+                elapsed = time.time() - start_time
+                print(f"Speach processs took {elapsed:.2f} sec")
                 success = True
                 break  # Exit loop on success
             except Exception as e:
@@ -103,13 +109,13 @@ async def capture_worker():
     """ Continuously capture frames and store them in the queue """
     while True:
         if frame_queue.full():  
-            await asyncio.sleep(1)  # Avoid overloading queue
+            await asyncio.sleep(0.2)  # Avoid overloading queue
             continue
         
         frame_path = await asyncio.get_running_loop().run_in_executor(executor, capture_frame)
         if frame_path:
             await frame_queue.put(frame_path)
-        await asyncio.sleep(1)  # Limit capture rate
+        await asyncio.sleep(0.2)  # Limit capture rate
 
 async def process_worker():
     """ Process frames from queue: send to API, process response, queue speech """
@@ -118,9 +124,12 @@ async def process_worker():
         loop = asyncio.get_running_loop()
         spoken_text = ""
         try:
+            total_start = time.time()
+            api_start = time.time()
             # Send image to API asynchronously
             response = await loop.run_in_executor(executor, send_image_to_api, frame_path)
-
+            api_elapsed = time.time() - api_start
+            print(f"API request took {api_elapsed:.2f} sec")
             # Ensure response is a dictionary
             if not isinstance(response, dict):
                 raise ValueError("Invalid API response format")
@@ -137,7 +146,8 @@ async def process_worker():
             # Construct spoken message
             spoken_text = "I found " + (", ".join(detected_objects) if detected_objects else "nothing")
             spoken_text += f" and the text in front is: {extracted_text}" if extracted_text else " and no text"
-
+            total_elapsed = time.time()- total_start
+            print(f"⏳ Total processing time (Capture → API → Processing): {total_elapsed:.2f} sec")
         except Exception as e:
             print(f"API call error: {e}")
             spoken_text = "An error occurred while making API call."
