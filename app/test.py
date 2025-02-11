@@ -1,13 +1,13 @@
 import cv2
 import numpy as np
-import easyocr
+# import easyocr
 import torch
 import onnxruntime as ort
 
 class ObjectAndTextDetection:
     def __init__(self):
         # Initialize EasyOCR reader
-        self.ocr_reader = easyocr.Reader(['en'])
+        # self.ocr_reader = easyocr.Reader(['en'])
 
         # Load the YOLOv4-tiny or YOLOv5 model in ONNX format
         self.ort_session = ort.InferenceSession("yolov5s.onnx")  # Use your path to the ONNX model
@@ -54,11 +54,11 @@ class ObjectAndTextDetection:
                 results.append(result)
         return results
 
-    def detect_text(self, image):
-        """ Run EasyOCR to extract text from image """
-        result = self.ocr_reader.readtext(image)
-        texts = [text[1] for text in result]  # Extract only the detected text
-        return texts
+    # def detect_text(self, image):
+    #     """ Run EasyOCR to extract text from image """
+    #     result = self.ocr_reader.readtext(image)
+    #     texts = [text[1] for text in result]  # Extract only the detected text
+    #     return texts
 
     def process_frame(self, frame):
         """ Process a frame to detect objects and text """
@@ -67,7 +67,8 @@ class ObjectAndTextDetection:
         yolo_results = self.process_yolo_results(boxes, confidences, class_ids)
 
         # Detect text using EasyOCR
-        texts = self.detect_text(frame)
+        # texts = self.detect_text(frame)
+        texts = ""
 
         return yolo_results, texts
 
