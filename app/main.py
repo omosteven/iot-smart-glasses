@@ -49,7 +49,7 @@ camera_config = picam2.create_still_configuration({"size": (4608, 2592)})  # Max
 picam2.configure(camera_config)
 # picam2.configure(picam2.create_still_configuration({"size": (640, 640)}))  # Reduce resolution
 picam2.set_controls({
-    "AfMode": 2,          # Enable continuous autofocus
+    "AfMode": 1,          # Enable continuous autofocus
     "ExposureTime": 5000,  # 5ms exposure
     "AnalogueGain": 1.5   # Adjust gain
 })
