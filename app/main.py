@@ -91,14 +91,17 @@ async def process_worker():
             continue
 
         data = response.get("data", {})
-        detections = data.get("detections", [])
-        text = data.get("text", "").strip()
-        print('resp:', response, 'data:',data)
+        
+        extracted_text = data.get("texts", "").strip()  # FIXED
 
-        detected_objects = [d["object"] for d in detections if isinstance(d, dict) and "object" in d]
+        detections = data.get("detections", [])
+        detected_objects = [d.get("object", "") for d in detections if isinstance(d, dict)]
+
         spoken_text = "I found " + (", ".join(detected_objects) if detected_objects else "nothing")
-        spoken_text += f" and the text in front is {text}" if text else " and no text"
+        spoken_text += f" and the text in front is: {extracted_text}" if extracted_text else " and no text"
+
         print('speaking:', spoken_text)
+
         if not speech_queue.full():  # Prevent overloading speech queue
             await speech_queue.put(spoken_text)
 
