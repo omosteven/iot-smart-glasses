@@ -50,7 +50,7 @@ picam2.configure(camera_config)
 # picam2.configure(picam2.create_still_configuration({"size": (640, 640)}))  # Reduce resolution
 picam2.set_controls({
     "AfMode": 1,          # Enable continuous autofocus
-    "ExposureTime": 5000,  # 5ms exposure
+    "ExposureTime": 2000,  # 5ms exposure
     "AnalogueGain": 1.5   # Adjust gain
 })
 
@@ -62,10 +62,9 @@ def capture_frame():
     try:
         start_time = time.time()
         image_path = "/tmp/frame.jpg"  # Use tmp directory to reduce disk writes
-        # picam2.set_controls({"AfTrigger": 0})  # Start autofocus
-        # time.sleep(0.5)  # Allow focus to adjust
-        picam2.set_controls({"AfMode": 2}) 
-        # picam2.set_controls({"AfTrigger": 1})  # Lock focus
+        picam2.set_controls({"AfTrigger": 0})  # Start autofocus
+        time.sleep(0.5)  # Allow focus to adjust
+        picam2.set_controls({"AfTrigger": 1})  # Lock focus
         
         # Capture image
         picam2.capture_file(image_path)
