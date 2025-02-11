@@ -23,17 +23,27 @@ executor = ThreadPoolExecutor(max_workers=3)
 
 # Keep camera initialized
 picam2 = Picamera2()
-picam2.configure(picam2.create_video_configuration({"size": (640, 640)}))
+camera_config = picam2.create_still_configuration({"size": (4608, 2592)})  # Max res for Camera 3
+picam2.configure(camera_config)
 # picam2.configure(picam2.create_still_configuration({"size": (640, 640)}))  # Reduce resolution
-picam2.set_controls({"ExposureTime": 5000})  # 5000µs = 5ms
-picam2.set_controls({"AnalogueGain": 1.5}) 
+picam2.set_controls({
+    "AfMode": 1,          # Enable continuous autofocus
+    "ExposureTime": 5000,  # 5ms exposure
+    "AnalogueGain": 1.5   # Adjust gain
+})
+
 picam2.start()
-time.sleep(10)  # Allow warm-up
+time.sleep(2)  # Allow warm-up
 
 def capture_frame():
     """ Capture a frame and save it without re-initializing the camera """
     try:
         image_path = "/tmp/frame.jpg"  # Use tmp directory to reduce disk writes
+        picam2.set_controls({"AfTrigger": 0})  # Start autofocus
+        time.sleep(0.5)  # Allow focus to adjust
+        picam2.set_controls({"AfTrigger": 1})  # Lock focus
+        
+        # Capture image
         picam2.capture_file(image_path)
         return image_path
     except Exception as e:
