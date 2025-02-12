@@ -1,6 +1,7 @@
 from fastapi import FastAPI
 from starlette.middleware.trustedhost import TrustedHostMiddleware
 from app.routes import routes  # Import routes
+from app.sockets import sockets
 from app.constants.constants import API_VERSION
 
 app = FastAPI()
@@ -21,6 +22,7 @@ app.add_middleware(MaxSizeMiddleware)
 
 # Include routes
 app.include_router(routes.router, prefix=API_VERSION)
+app.include_router(sockets.router, prefix=API_VERSION) 
 
 
 @app.get(f"{API_VERSION}")

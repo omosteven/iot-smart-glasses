@@ -1,0 +1,1 @@
+CHECK_DEVICE = "check-device"
