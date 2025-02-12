@@ -262,6 +262,7 @@ async def image_to_detection(image_file: UploadFile):
         img_array = np.array(image)
         # Run YOLO detection and Tesseract OCR concurrently
         loop = asyncio.get_running_loop()
+        elapsed = 0
         with ThreadPoolExecutor(max_workers=2) as pool:
             start_time = time.time()
             yolo_task = loop.run_in_executor(pool, detect_with_yolo, img_array, 'yolo8n')
@@ -270,7 +271,7 @@ async def image_to_detection(image_file: UploadFile):
             detections, detected_texts = await asyncio.gather(yolo_task, ocr_task)
             elapsed = time.time() - start_time
             print(f"Overal Time taken: {elapsed:.2f} sec")
-        return {"detections": detections, "texts": detected_texts}
+        return {"detections": detections, "texts": detected_texts, "time_taken": elapsed}
 
     except Exception as e:
         logger.error(f"Error processing image: {e}")

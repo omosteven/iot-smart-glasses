@@ -32,6 +32,7 @@ async def broadcast_log(event: str, data: dict):
     for device_id, websocket in connected_clients.items():
         try:
             await websocket.send_json(message)
+            print('sent to:', device_id, 'event:', event,'mesg:', message)
         except Exception as e:
             print(f"Failed to send to {device_id}: {e}")
             disconnected_clients.append(device_id)
