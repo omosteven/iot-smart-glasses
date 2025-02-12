@@ -7,8 +7,22 @@ from concurrent.futures import ThreadPoolExecutor
 from picamera2 import Picamera2
 from utils.api_client import send_image_to_api
 
+from fastapi import FastAPI
+from fastapi.responses import StreamingResponse
+from fastapi.staticfiles import StaticFiles
+import uvicorn
+import os
+
 is_recording = False
 video_writer = None 
+
+VIDEO_DIRECTORY = "/tmp/"
+VIDEO_PATH = os.path.join(VIDEO_DIRECTORY, "recorded_video.avi")
+
+app = FastAPI()
+
+# Serve recorded video files as static files
+app.mount("/videos", StaticFiles(directory=VIDEO_DIRECTORY), name="videos")
 
 def release_camera():
     """Check if /dev/video0 is in use and kill the process using it."""
@@ -30,6 +44,22 @@ def release_camera():
         print(f"Error while checking camera process: {e}")
 
 release_camera()
+
+# Initialize FastAPI video endpoints
+def video_streamer(file_path: str):
+    """Generator function to stream video file in chunks."""
+    with open(file_path, "rb") as video_file:
+        while chunk := video_file.read(1024 * 1024):  # Read in 1MB chunks
+            yield chunk
+
+@app.get("/stream")
+async def stream_video():
+    """Stream recorded video in real-time."""
+    if not os.path.exists(VIDEO_PATH):
+        return {"error": "Video file not found"}
+    
+    return StreamingResponse(video_streamer(VIDEO_PATH), media_type="video/avi")
+
 # Global queues for speech and frames
 speech_queue = asyncio.Queue(maxsize=5)  # Prevent excessive memory usage
 frame_queue = asyncio.Queue(maxsize=1)   # Only process one frame at a time
@@ -192,6 +222,12 @@ async def process_worker():
 
         frame_queue.task_done()
 
+async def run_fastapi():
+    """ Start FastAPI server inside the existing script """
+    config = uvicorn.Config(app, host="0.0.0.0", port=8000, log_level="info")
+    server = uvicorn.Server(config)
+    await server.serve()
+
 async def main():
     """ Main async function to start all background tasks """
     print("Starting optimized real-time processing...")
@@ -200,6 +236,7 @@ async def main():
     asyncio.create_task(speech_worker())
     asyncio.create_task(capture_worker())
     asyncio.create_task(process_worker())
+    asyncio.create_task(run_fastapi()) 
 
     while True:
         await asyncio.sleep(1)  # Keep loop alive
