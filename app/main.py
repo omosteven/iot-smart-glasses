@@ -7,6 +7,8 @@ from concurrent.futures import ThreadPoolExecutor
 from picamera2 import Picamera2
 from utils.api_client import send_image_to_api
 
+is_recording = False
+video_writer = None 
 
 def release_camera():
     """Check if /dev/video0 is in use and kill the process using it."""
@@ -58,23 +60,46 @@ picam2.set_controls({
 picam2.start()
 time.sleep(2)  # Allow warm-up
 
+# def capture_frame():
+#     """ Capture a frame and save it without re-initializing the camera """
+#     try:
+#         start_time = time.time()
+#         image_path = "/tmp/frame.jpg"  # Use tmp directory to reduce disk writes
+#         picam2.set_controls({"AfTrigger": 0})  # Start autofocus
+#         time.sleep(0.5)  # Allow focus to adjust
+#         picam2.set_controls({"AfTrigger": 1})  # Lock focus
+        
+#         # Capture image
+#         picam2.capture_file(image_path)
+#         elapsed = time.time() - start_time
+#         print(f"Capturing completed in {elapsed:.2f} sec")
+#         return image_path
+#     except Exception as e:
+#         print(f"Camera error: {e}")
+#         return None
+
 def capture_frame():
-    """ Capture a frame and save it without re-initializing the camera """
+    """ Capture a frame for object detection or video recording. """
     try:
         start_time = time.time()
-        image_path = "/tmp/frame.jpg"  # Use tmp directory to reduce disk writes
-        picam2.set_controls({"AfTrigger": 0})  # Start autofocus
-        time.sleep(0.5)  # Allow focus to adjust
-        picam2.set_controls({"AfTrigger": 1})  # Lock focus
-        
-        # Capture image
-        picam2.capture_file(image_path)
+        frame = picam2.capture_array()  # Capture directly into memory
         elapsed = time.time() - start_time
         print(f"Capturing completed in {elapsed:.2f} sec")
-        return image_path
+        return frame
     except Exception as e:
         print(f"Camera error: {e}")
         return None
+
+def record_video(frame):
+    """ Record video frames to a file if `is_recording` is True. """
+    global video_writer
+    if is_recording:
+        if video_writer is None:
+            # Create VideoWriter object
+            fourcc = cv2.VideoWriter_fourcc(*'XVID')
+            video_writer = cv2.VideoWriter('/tmp/recorded_video.avi', fourcc, 30.0, (1280, 720))
+        
+        video_writer.write(frame)
 
 def speak_text(text: str):
     """ Speak text using pyttsx3 (blocking task) """
@@ -119,6 +144,7 @@ async def capture_worker():
         
         frame_path = await asyncio.get_running_loop().run_in_executor(executor, capture_frame)
         if frame_path:
+            record_video(frame_path)
             await frame_queue.put(frame_path)
             elapsed = time.time() - start_time
             print(f"Capturing processs took {elapsed:.2f} sec")
