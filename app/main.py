@@ -85,15 +85,21 @@ def capture_frame():
         picam2.capture_file(image_path)
         elapsed = time.time() - start_time
         print(f"Capturing completed in {elapsed:.2f} sec")
-        rotated_image = rotate_frame(image, angle=135)
         image = cv2.imread(image_path)
+        if image is None:
+            print('Error capturimg')
+            return None
+        
+        rotated_image = rotate_frame(image, angle=135)
+
 
         cv2.imwrite("/tmp/rotated.jpg", rotated_image, [cv2.IMWRITE_JPEG_QUALITY, 100])
 
         elapsed = time.time() - start_time
         print(f"Capturing and rotating completed in {elapsed:.2f} sec")
 
-        return image_path
+        # return image_path
+        return "/tmp/rotated.jpg"
     except Exception as e:
         print(f"Camera error: {e}")
         return None
