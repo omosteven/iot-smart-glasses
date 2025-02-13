@@ -10,3 +10,27 @@ libcamera-still -o /tmp/frame.jpg --autofocus-on-capture -q 95 -n
 scp toor@raspberrypi.local:~/Documents/image.jpg ~/Downloads/
 
 scp toor@raspberrypi.local:/tmp/frame.jpg ~/Downloads/
+sudo nano /etc/systemd/system/auto_start_python.service
+
+journalctl -u auto_start_python.service -n 50 --no-pager
+
+
+sudo systemctl daemon-reload
+sudo systemctl enable auto_start_python.service
+sudo systemctl stop auto_start_python.service
+sudo systemctl status auto_start_python.service
+
+[Unit]
+Description=My Python Script
+After=network.target
+
+[Service]
+ExecStart=/usr/bin/python3 /home/toor/Documents/iot-smart-glasses/app/main.py
+WorkingDirectory=/home/toor
+StandardOutput=inherit
+StandardError=inherit
+Restart=always
+User=pi
+
+[Install]
+WantedBy=multi-user.target
