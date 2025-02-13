@@ -53,12 +53,18 @@ picam2.set_controls({
     "AfMode": 1,          # Enable continuous autofocus
     "ExposureTime": 5000,  # 5ms exposure
     "AnalogueGain": 1.5,   # Adjust gain
-    # "Rotation": 270
-    "Transform": {"hflip": True, "vflip": True}
 })
 
 picam2.start()
 time.sleep(2)  # Allow warm-up
+
+def rotate_frame(image, angle=45):
+    h, w = image.shape[:2]
+    center = (w // 2, h // 2)
+    rotation_matrix = cv2.getRotationMatrix2D(center, angle, 1.0)
+    rotated = cv2.warpAffine(image, rotation_matrix, (w, h))
+    return rotated
+
 
 def capture_frame():
     """ Capture a frame and save it without re-initializing the camera """
@@ -70,9 +76,19 @@ def capture_frame():
         picam2.set_controls({"AfTrigger": 1})  # Lock focus
         
         # Capture image
-        picam2.capture_file(image_path)
+        # picam2.capture_file(image_path)
+        # elapsed = time.time() - start_time
+        # print(f"Capturing completed in {elapsed:.2f} sec")
+        # return image_path
+        image = picam2.capture_array()  # Capture as an array (not file)
+        
+        # Rotate the captured image
+        rotated_image = rotate_frame(image, angle=45)  # Rotate by 45 degrees (or any angle)
+
+        # Save the rotated image
+        cv2.imwrite(image_path, rotated_image)  # Save rotated image to file
         elapsed = time.time() - start_time
-        print(f"Capturing completed in {elapsed:.2f} sec")
+        print(f"Capturing and rotating completed in {elapsed:.2f} sec")
         return image_path
     except Exception as e:
         print(f"Camera error: {e}")
