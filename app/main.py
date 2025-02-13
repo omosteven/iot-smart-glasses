@@ -52,7 +52,8 @@ picam2.configure(camera_config)
 picam2.set_controls({
     "AfMode": 1,          # Enable continuous autofocus
     "ExposureTime": 5000,  # 5ms exposure
-    "AnalogueGain": 1.5   # Adjust gain
+    "AnalogueGain": 1.5,   # Adjust gain
+    "Rotation": 270
 })
 
 picam2.start()
