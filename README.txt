@@ -11,13 +11,13 @@ scp toor@raspberrypi.local:~/Documents/image.jpg ~/Downloads/
 
 scp toor@raspberrypi.local:/tmp/frame.jpg ~/Downloads/
 sudo nano /etc/systemd/system/auto_start_python.service
-
+ journalctl -u auto_start_python.service -f
 journalctl -u auto_start_python.service -n 50 --no-pager
-
+sudo tail -f /var/log/auto_start_python.log
 
 sudo systemctl daemon-reload
 sudo systemctl enable auto_start_python.service
-sudo systemctl stop auto_start_python.service
+sudo systemctl start auto_start_python.service
 sudo systemctl status auto_start_python.service
 
 [Unit]

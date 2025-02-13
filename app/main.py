@@ -83,7 +83,7 @@ def capture_frame():
         image = picam2.capture_array()  # Capture as an array (not file)
         
         # Rotate the captured image
-        rotated_image = rotate_frame(image, angle=135)  # Rotate by 45 degrees (or any angle)
+        rotated_image = rotate_frame(image, angle=-135)  # Rotate by 45 degrees (or any angle)
 
         # Save the rotated image
         cv2.imwrite(image_path, rotated_image)  # Save rotated image to file
