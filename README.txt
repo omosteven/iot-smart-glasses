@@ -6,7 +6,10 @@ curl -O https://github.com/AlexeyAB/darknet/releases/download/darknet_yolo_v4_pr
 Run The App On Local - uvicorn app.main:app --reload
 Run yolo export model=yolov8n.pt format=onnx to load yolo onnx
 
-sudo systemctl start nginx
+sudo systemctl restart nginx
+sudo nano /etc/nginx/nginx.conf 
+sudo nano /etc/systemd/system/iot-smart-glasses.service
+
 sudo systemctl daemon-reload
 sudo systemctl restart iot-smart-glasses.service
 sudo journalctl -u iot-smart-glasses.service -f   for logs
