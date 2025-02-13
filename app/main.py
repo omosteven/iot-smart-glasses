@@ -13,13 +13,15 @@ from fastapi.staticfiles import StaticFiles
 import uvicorn
 import os
 
-is_recording = False
+is_recording = True
 video_writer = None 
 
-VIDEO_DIRECTORY = "/tmp/"
-VIDEO_PATH = os.path.join(VIDEO_DIRECTORY, "recorded_video.avi")
+VIDEO_DIRECTORY = "/home/toor/Documents/recording/"
+VIDEO_PATH = os.path.join(VIDEO_DIRECTORY, "recorded_video.mp4")
 
 app = FastAPI()
+
+os.makedirs(VIDEO_DIRECTORY, exist_ok=True)
 
 # Serve recorded video files as static files
 app.mount("/videos", StaticFiles(directory=VIDEO_DIRECTORY), name="videos")
@@ -58,7 +60,7 @@ async def stream_video():
     if not os.path.exists(VIDEO_PATH):
         return {"error": "Video file not found"}
     
-    return StreamingResponse(video_streamer(VIDEO_PATH), media_type="video/avi")
+    return StreamingResponse(video_streamer(VIDEO_PATH), media_type="video/mp4")
 
 # Global queues for speech and frames
 speech_queue = asyncio.Queue(maxsize=5)  # Prevent excessive memory usage
@@ -109,13 +111,19 @@ time.sleep(2)  # Allow warm-up
 #         return None
 
 def capture_frame():
-    """ Capture a frame for object detection or video recording. """
+    """ Capture a frame and save it without re-initializing the camera """
     try:
         start_time = time.time()
-        frame = picam2.capture_array()  # Capture directly into memory
+        image_path = "/tmp/frame.jpg"  # Use tmp directory to reduce disk writes
+        picam2.set_controls({"AfTrigger": 0})  # Start autofocus
+        time.sleep(0.5)  # Allow focus to adjust
+        picam2.set_controls({"AfTrigger": 1})  # Lock focus
+        
+        # Capture image
+        picam2.capture_file(image_path)
         elapsed = time.time() - start_time
         print(f"Capturing completed in {elapsed:.2f} sec")
-        return frame
+        return image_path
     except Exception as e:
         print(f"Camera error: {e}")
         return None
@@ -125,9 +133,8 @@ def record_video(frame):
     global video_writer
     if is_recording:
         if video_writer is None:
-            # Create VideoWriter object
-            fourcc = cv2.VideoWriter_fourcc(*'XVID')
-            video_writer = cv2.VideoWriter('/tmp/recorded_video.avi', fourcc, 30.0, (1280, 720))
+            fourcc = cv2.VideoWriter_fourcc(*'mp4v')
+            video_writer = cv2.VideoWriter(VIDEO_PATH, fourcc, 30.0, (640, 640))
         
         video_writer.write(frame)
 
@@ -174,7 +181,7 @@ async def capture_worker():
         
         frame_path = await asyncio.get_running_loop().run_in_executor(executor, capture_frame)
         if frame_path:
-            record_video(frame_path)
+            record_video(cv2.imread(frame_path))
             await frame_queue.put(frame_path)
             elapsed = time.time() - start_time
             print(f"Capturing processs took {elapsed:.2f} sec")
@@ -223,8 +230,12 @@ async def process_worker():
         frame_queue.task_done()
 
 async def run_fastapi():
-    """ Start FastAPI server inside the existing script """
-    config = uvicorn.Config(app, host="0.0.0.0", port=8000, log_level="info")
+    """ Start FastAPI server and log IP/Port """
+    server_host = "0.0.0.0"
+    server_port = 8000
+    print(f"FastAPI running on {server_host}:{server_port}")
+    
+    config = uvicorn.Config(app, host=server_host, port=server_port, log_level="info")
     server = uvicorn.Server(config)
     await server.serve()
 
