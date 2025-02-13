@@ -1,0 +1,39 @@
+@import "src/components/ui/__variables";
+
+.main {
+  width: 100%;
+  &__status_actions {
+    display: flex;
+    gap: 10px;
+    width: 100%;
+    // padding-bottom: 5px;
+    border-bottom: 1px solid $white-color;
+    p {
+      font-weight: bold;
+      color: $white-color;
+      padding-bottom: 5px;
+      cursor: pointer;
+      margin-bottom: 0;
+      &.active {
+        border-bottom: 10px solid $primary-color;
+      }
+    }
+  }
+  &__detections {
+    &__container{
+      max-height: 100vh;
+      overflow: scroll;
+    }
+    &__each {
+      border: 1px solid $primary-color;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      padding: 8px;
+      p {
+        margin-top: 0;
+        margin-bottom: 0;
+      }
+    }
+  }
+}

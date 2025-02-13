@@ -1,0 +1,190 @@
+@import "src/components/ui/__variables";
+
+body {
+  height: 100%;
+  background-color: $background-color !important;
+  font-family: "Courier New", Courier, monospace;
+}
+
+.layout {
+  background-color: $background-color;
+  min-height: 60vh;
+  padding: 20px 120px;
+  color: $white-color;
+  .flex {
+    display: flex !important;
+  }
+  .flex-center {
+    display: flex !important;
+    align-items: center;
+  }
+  .gap-1 {
+    gap: 10px;
+  }
+  // border: 0.5px solid $primary-color;
+}
+
+.layout-header {
+  height: 100px;
+  background-color: $background-color;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0px 120px;
+  color: $white-color;
+  border-bottom: 0.1px solid $primary-color;
+  li {
+    list-style: none;
+    font-weight: 500;
+    font-size: 20px;
+    cursor: pointer;
+  }
+  a {
+    list-style: none;
+    font-weight: 500;
+    font-size: 20px;
+    cursor: pointer;
+    color: $white-color;
+    text-decoration: 2px underline $primary-color;
+  }
+
+  &__left {
+    img {
+      width: 100px;
+      height: 100px;
+      margin-top: 10px;
+    }
+    align-items: center !important;
+    h3 {
+      font-size: 24px;
+      font-weight: bold;
+      margin-top: 0;
+      margin-bottom: 0;
+    }
+    p {
+      margin-top: 6px;
+      margin-bottom: 0;
+    }
+  }
+
+  div {
+    gap: 40px;
+    @media screen and (max-width: $small-screen) {
+      gap: unset;
+      width: 100%;
+      justify-content: space-between;
+      img {
+        width: 40px;
+        height: 40px;
+        margin-top: 10px;
+      }
+    }
+  }
+  button {
+    background-color: $background-color !important;
+  }
+
+  @media screen and (max-width: $large-screen) {
+    padding: 0px 70px;
+  }
+
+  @media screen and (max-width: $medium-screen) {
+    padding: 0px 50px;
+  }
+
+  @media screen and (max-width: $small-screen) {
+    padding: 0px 20px;
+    flex-direction: column;
+    width: 100%;
+    // gap: 10px;
+    height: 70px;
+    justify-content: center;
+    li {
+      font-size: 16px;
+    }
+    .custom-button {
+      display: none !important;
+    }
+    button {
+      height: 40px !important;
+      width: 100px !important;
+      display: none;
+    }
+  }
+}
+
+.layout-footer {
+  display: grid;
+
+  grid-template-columns: 1fr 1fr;
+
+  background-color: $background-color;
+
+  color: $white-color;
+
+  a {
+    list-style: none;
+    font-weight: 500;
+    font-size: 16px;
+    cursor: pointer;
+    color: $white-color;
+    // text-decoration: 2px underline $secondary-color;
+    display: block;
+  }
+
+  padding: 50px 150px;
+
+  @media screen and (max-width: $large-screen) {
+    padding: 50px 70px;
+  }
+
+  @media screen and (max-width: $medium-screen) {
+    padding: 50px 50px;
+
+    grid-template-columns: 1fr;
+
+    gap: 24px;
+  }
+
+  @media screen and (max-width: $small-screen) {
+    padding: 50px 20px;
+  }
+
+  div {
+    display: flex;
+    // flex-direction: column;
+    gap: 10px;
+    @media screen and (max-width: $small-screen) {
+      flex-direction: column;
+      align-items: start;
+    }
+  }
+
+  &__socials {
+    display: flex !important;
+    align-items: center;
+    @media screen and (max-width: $small-screen) {
+      flex-direction: column;
+      align-items: start;
+    }
+    h3 {
+      font-size: 20px;
+      margin-top: 0;
+      margin-bottom: 0;
+      @media screen and (max-width: $large-screen) {
+        font-size: 18px;
+      }
+
+      @media screen and (max-width: $small-screen) {
+        font-size: 16px;
+      }
+    }
+    a {
+      margin-top: 0;
+      margin-bottom: 0;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+    }
+  }
+}
