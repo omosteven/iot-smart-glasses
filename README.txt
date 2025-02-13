@@ -10,3 +10,5 @@ libcamera-still -o /tmp/frame.jpg --autofocus-on-capture -q 95 -n
 scp toor@raspberrypi.local:~/Documents/image.jpg ~/Downloads/
 
 scp toor@raspberrypi.local:/tmp/frame.jpg ~/Downloads/
+
+scp toor@raspberrypi.local:/home/toor/Documents/recording/recorded_video.mp4 ~/Downloads/

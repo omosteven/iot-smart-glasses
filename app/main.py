@@ -16,7 +16,7 @@ import os
 is_recording = True
 video_writer = None 
 
-VIDEO_DIRECTORY = "/home/toor/Documents/recording/"
+VIDEO_DIRECTORY = os.path.expanduser("~/Documents/recording/")  # Expand `~`
 VIDEO_PATH = os.path.join(VIDEO_DIRECTORY, "recorded_video.mp4")
 
 app = FastAPI()
@@ -130,13 +130,27 @@ def capture_frame():
 
 def record_video(frame):
     """ Record video frames to a file if `is_recording` is True. """
-    global video_writer
+    global video_writer, is_recording
+
+    VIDEO_DIRECTORY = os.path.expanduser("~/Documents/recording/")
+    os.makedirs(VIDEO_DIRECTORY, exist_ok=True)  # Ensure directory exists
+    video_path = os.path.join(VIDEO_DIRECTORY, "recorded_video.mp4")  
+
     if is_recording:
         if video_writer is None:
+            # Use MP4 (H.264 codec)
             fourcc = cv2.VideoWriter_fourcc(*'mp4v')
-            video_writer = cv2.VideoWriter(VIDEO_PATH, fourcc, 30.0, (640, 640))
-        
-        video_writer.write(frame)
+            video_writer = cv2.VideoWriter(video_path, fourcc, 30.0, (1280, 720))
+            print(f"📹 Started recording: {video_path}")
+
+        video_writer.write(frame)  # Write the frame
+
+    else:
+        if video_writer is not None:
+            video_writer.release()
+            video_writer = None
+            print("🛑 Stopped recording")
+
 
 def speak_text(text: str):
     """ Speak text using pyttsx3 (blocking task) """
