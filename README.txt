@@ -17,7 +17,7 @@ sudo tail -f /var/log/auto_start_python.log
 
 sudo systemctl daemon-reload
 sudo systemctl enable auto_start_python.service
-sudo systemctl start auto_start_python.service
+sudo systemctl restart auto_start_python.service
 sudo systemctl status auto_start_python.service
 
 [Unit]

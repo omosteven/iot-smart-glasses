@@ -82,20 +82,17 @@ def capture_frame():
         picam2.set_controls({"AfTrigger": 1})  # Lock focus
         
         # Capture image
-        # picam2.capture_file(image_path)
-        # elapsed = time.time() - start_time
-        # print(f"Capturing completed in {elapsed:.2f} sec")
-        # return image_path
-        image = picam2.capture_array()  # Capture as an array (not file)
-        
-        # Rotate the captured image
-        rotated_image = image
-        # rotated_image = rotate_frame(image, angle=-90)  # Rotate by 45 degrees (or any angle)
+        picam2.capture_file(image_path)
+        elapsed = time.time() - start_time
+        print(f"Capturing completed in {elapsed:.2f} sec")
+        rotated_image = rotate_frame(image, angle=135)
+        image = cv2.imread(image_path)
 
-        # Save the rotated image
-        cv2.imwrite(image_path, rotated_image)  # Save rotated image to file
+        cv2.imwrite("/tmp/rotated.jpg", rotated_image, [cv2.IMWRITE_JPEG_QUALITY, 100])
+
         elapsed = time.time() - start_time
         print(f"Capturing and rotating completed in {elapsed:.2f} sec")
+
         return image_path
     except Exception as e:
         print(f"Camera error: {e}")
