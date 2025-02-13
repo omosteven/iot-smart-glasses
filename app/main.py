@@ -34,11 +34,11 @@ frame_queue = asyncio.Queue(maxsize=1)   # Only process one frame at a time
 
 # Initialize pyttsx3 once
 engine = pyttsx3.init()
-engine.setProperty('rate', 65)
+engine.setProperty('rate', 80)
 engine.setProperty('volume', 1.0)
 voices = engine.getProperty('voices')
 if voices:
-    engine.setProperty('voice', voices[0].id)
+    engine.setProperty('voice', voices[1].id)
 
 # ThreadPoolExecutor for blocking tasks
 executor = ThreadPoolExecutor(max_workers=3)
@@ -89,7 +89,8 @@ def capture_frame():
         image = picam2.capture_array()  # Capture as an array (not file)
         
         # Rotate the captured image
-        rotated_image = rotate_frame(image, angle=-90)  # Rotate by 45 degrees (or any angle)
+        rotated_image = image
+        # rotated_image = rotate_frame(image, angle=-90)  # Rotate by 45 degrees (or any angle)
 
         # Save the rotated image
         cv2.imwrite(image_path, rotated_image)  # Save rotated image to file
