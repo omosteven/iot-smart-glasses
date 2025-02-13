@@ -53,7 +53,8 @@ picam2.set_controls({
     "AfMode": 1,          # Enable continuous autofocus
     "ExposureTime": 5000,  # 5ms exposure
     "AnalogueGain": 1.5,   # Adjust gain
-    "Rotation": 270
+    # "Rotation": 270
+    "Transform": {"hflip": True, "vflip": True}
 })
 
 picam2.start()
