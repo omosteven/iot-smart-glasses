@@ -26,8 +26,8 @@ thread_pool = ThreadPoolExecutor(max_workers=2)
 
 CLASSES_CONTRAINTS ={
     "0": "person",
-    "1": "bicycle",
-    "2": "car",
+    # "1": "bicycle",
+    # "2": "car",
     "3": "motorcycle",
     "4": "airplane",
     "5": "bus",
