@@ -58,20 +58,6 @@ picam2.set_controls({
 picam2.start()
 time.sleep(2)  # Allow warm-up
 
-def rotate_frame(image, angle=45):
-    h, w = image.shape[:2]
-    center = (w // 2, h // 2)
-    rotation_matrix = cv2.getRotationMatrix2D(center, angle, 1.0)
-    
-    if len(image.shape) == 2:  # Grayscale
-        rotated = cv2.warpAffine(image, rotation_matrix, (w, h))
-    else:  # Color (BGR)
-        rotated = cv2.warpAffine(image, rotation_matrix, (w, h), flags=cv2.INTER_LINEAR, borderMode=cv2.BORDER_CONSTANT)
-    
-    return rotated
-
-
-
 def capture_frame():
     """ Capture a frame and save it without re-initializing the camera """
     try:
@@ -85,21 +71,11 @@ def capture_frame():
         picam2.capture_file(image_path)
         elapsed = time.time() - start_time
         print(f"Capturing completed in {elapsed:.2f} sec")
-        image = cv2.imread(image_path)
-        if image is None:
-            print('Error capturimg')
-            return None
-        
-        rotated_image = rotate_frame(image, angle=135)
-
-
-        cv2.imwrite("/tmp/rotated.jpg", rotated_image, [cv2.IMWRITE_JPEG_QUALITY, 100])
-
+      
         elapsed = time.time() - start_time
         print(f"Capturing and rotating completed in {elapsed:.2f} sec")
 
-        # return image_path
-        return "/tmp/rotated.jpg"
+        return image_path
     except Exception as e:
         print(f"Camera error: {e}")
         return None
