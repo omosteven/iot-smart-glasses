@@ -189,7 +189,6 @@ def speak_text(text: str):
         except Exception as e:
             print(f"⚠️ Speech synthesis error: {e}")
             # Try reinitializing pyttsx3 in case of failure
-            global engine
             try:
                 engine = pyttsx3.init()
             except Exception as e:
