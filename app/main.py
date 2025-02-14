@@ -62,17 +62,30 @@ async def stream_video():
     
     return StreamingResponse(video_streamer(VIDEO_PATH), media_type="video/mp4")
 
+@app.post("/start-recording")
+async def api_start_recording():
+    """API Endpoint to start recording."""
+    start_video_recording()
+    return {"message": "Video recording started"}
+
+@app.post("/stop-recording")
+async def api_stop_recording():
+    """API Endpoint to stop recording."""
+    stop_video_recording()
+    return {"message": "Video recording stopped"}
+
+
 # Global queues for speech and frames
 speech_queue = asyncio.Queue(maxsize=5)  # Prevent excessive memory usage
 frame_queue = asyncio.Queue(maxsize=1)   # Only process one frame at a time
 
 # Initialize pyttsx3 once
 engine = pyttsx3.init()
-engine.setProperty('rate', 130)
+engine.setProperty('rate', 80)
 engine.setProperty('volume', 1.0)
 voices = engine.getProperty('voices')
 if voices:
-    engine.setProperty('voice', voices[0].id)
+    engine.setProperty('voice', voices[1].id)
 
 # ThreadPoolExecutor for blocking tasks
 executor = ThreadPoolExecutor(max_workers=3)
@@ -128,28 +141,42 @@ def capture_frame():
         print(f"Camera error: {e}")
         return None
 
-def record_video(frame):
-    """ Record video frames to a file if `is_recording` is True. """
-    global video_writer, is_recording
+def convert_to_mp4():
+    """Convert recorded H.264 video to MP4 format."""
+    h264_path = os.path.join(VIDEO_DIRECTORY, "recorded_video.h264")
+    mp4_path = os.path.join(VIDEO_DIRECTORY, "recorded_video.mp4")
 
-    VIDEO_DIRECTORY = os.path.expanduser("~/Documents/recording/")
-    os.makedirs(VIDEO_DIRECTORY, exist_ok=True)  # Ensure directory exists
-    video_path = os.path.join(VIDEO_DIRECTORY, "recorded_video.mp4")  
-
-    if is_recording:
-        if video_writer is None:
-            # Use MP4 (H.264 codec)
-            fourcc = cv2.VideoWriter_fourcc(*'mp4v')
-            video_writer = cv2.VideoWriter(video_path, fourcc, 30.0, (1280, 720))
-            print(f"📹 Started recording: {video_path}")
-
-        video_writer.write(frame)  # Write the frame
-
+    if os.path.exists(h264_path):
+        print("🔄 Converting H.264 to MP4...")
+        subprocess.run(["ffmpeg", "-i", h264_path, "-c:v", "copy", mp4_path, "-y"])
+        os.remove(h264_path)  # Clean up raw H.264 file
+        print(f"✅ Video saved as {mp4_path}")
     else:
-        if video_writer is not None:
-            video_writer.release()
-            video_writer = None
-            print("🛑 Stopped recording")
+        print("⚠️ No H.264 file found for conversion.")
+
+
+def start_video_recording():
+    """Start recording video using Picamera2."""
+    global is_recording
+    video_path = os.path.join(VIDEO_DIRECTORY, "recorded_video.h264")  # H.264 format
+
+    if not is_recording:
+        print(f"📹 Starting video recording: {video_path}")
+        picam2.start_recording(video_path, format='h264')
+        is_recording = True
+
+def stop_video_recording():
+    """Stop recording video using Picamera2."""
+    global is_recording
+    if is_recording:
+        print("🛑 Stopping video recording")
+        picam2.stop_recording()
+        is_recording = False
+
+        # Convert H.264 to MP4 for easy playback
+        convert_to_mp4()
+
+
 
 
 def speak_text(text: str):
@@ -195,7 +222,8 @@ async def capture_worker():
         
         frame_path = await asyncio.get_running_loop().run_in_executor(executor, capture_frame)
         if frame_path:
-            record_video(cv2.imread(frame_path))
+            if not is_recording:
+                start_video_recording()
             await frame_queue.put(frame_path)
             elapsed = time.time() - start_time
             print(f"Capturing processs took {elapsed:.2f} sec")
