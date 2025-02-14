@@ -179,6 +179,10 @@ def stop_video_recording():
 
 def speak_text(text: str):
     """ Speak text using pyttsx3 (blocking task) with error handling """
+    global engine
+    if engine is None:
+        engine = pyttsx3.init()
+
     if text.strip():
         try:
             start_time = time.time()
@@ -188,11 +192,7 @@ def speak_text(text: str):
             print(f"Speech completed in {elapsed:.2f} sec")
         except Exception as e:
             print(f"⚠️ Speech synthesis error: {e}")
-            # Try reinitializing pyttsx3 in case of failure
-            try:
-                engine = pyttsx3.init()
-            except Exception as e:
-                print(f"⚠️ Failed to reinitialize pyttsx3: {e}")
+
 
 async def speech_worker():
     """ Background task for speaking text from queue with retry mechanism """
