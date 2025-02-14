@@ -177,16 +177,48 @@ def stop_video_recording():
         convert_to_mp4()
 
 
-
-
 def speak_text(text: str):
-    """ Speak text using pyttsx3 (blocking task) """
+    """ Speak text using pyttsx3 (blocking task) with error handling """
     if text.strip():
-        start_time = time.time()
-        engine.say(text)
-        engine.runAndWait()
-        elapsed = time.time() - start_time
-        print(f"Speach completed in {elapsed:.2f} sec")
+        try:
+            start_time = time.time()
+            engine.say(text)
+            engine.runAndWait()
+            elapsed = time.time() - start_time
+            print(f"Speech completed in {elapsed:.2f} sec")
+        except Exception as e:
+            print(f"⚠️ Speech synthesis error: {e}")
+            # Try reinitializing pyttsx3 in case of failure
+            global engine
+            try:
+                engine = pyttsx3.init()
+            except Exception as e:
+                print(f"⚠️ Failed to reinitialize pyttsx3: {e}")
+
+async def speech_worker():
+    """ Background task for speaking text from queue with retry mechanism """
+    while True:
+        text = await speech_queue.get()
+        success = False
+        max_retries = 3  # Retry up to 3 times
+        
+        for attempt in range(max_retries):
+            try:
+                start_time = time.time()
+                await asyncio.get_running_loop().run_in_executor(executor, speak_text, text)
+                elapsed = time.time() - start_time
+                print(f"Speech process took {elapsed:.2f} sec")
+                success = True
+                break  # Exit loop on success
+            except Exception as e:
+                print(f"⚠️ Speech synthesis failed (Attempt {attempt + 1}): {e}")
+                await asyncio.sleep(1)  # Small delay before retrying
+        
+        if not success:
+            print(f"⏭️ Skipping speech output after {max_retries} failed attempts: {text}")
+        
+        speech_queue.task_done()
+
 
 async def speech_worker():
     """ Background task for speaking text from queue with retry mechanism """
